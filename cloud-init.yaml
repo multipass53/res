@@ -1,0 +1,56 @@
+#cloud-config
+users:
+  - default
+
+# System updates
+package_update: true
+package_upgrade: true
+
+# Install depdencies
+packages:
+  - openssh-server
+  - software-properties-common
+  - pkg-config
+  - cmake
+  - python3-pip
+  - python3-setuptools
+  - python3-wheel
+  - ninja-build
+  - libffi-dev
+  - libgit2-dev
+  - git
+  - tmux
+  - libncurses5-dev
+  - libncursesw5-dev
+  - ncurses-doc
+  - libreadline-dev
+  - emacs
+  - vim
+  - nano
+  - [gdb, 15.0.50.20240403-0ubuntu1]
+  - [gcc-9, 9.5.0-6ubuntu2]
+  - [make, 4.3-4.1build2]
+  - [valgrind, 1:3.22.0-0ubuntu3]
+
+write_files:
+# Disable ASLR memory randomization
+  - path: /etc/sysctl.d/9999-ics53-aslr.conf
+    owner: root:root
+    permissions: 0o644
+    content: "kernel.randomize_va_space = 0"
+# Allow ssh without a password
+  - path: /etc/ssh/sshd_config.d/9999-ics53-password-auth.conf
+    owner: root:root
+    permissions: 0o644
+    content: |
+      PasswordAuthentication yes
+      KbdInteractiveAuthentication yes
+      PermitEmptyPasswords yes
+
+runcmd:
+  - sysctl -p /etc/sysctl.d/9999-ics53-aslr.conf
+  - mkdir /home/ubuntu/shared
+  - "[ ! -f /usr/bin/gcc ] || mv /usr/bin/gcc /usr/bin/gcc.old"
+  - ln -s /usr/bin/gcc-9 /usr/bin/gcc
+  - passwd -d ubuntu
+  - systemctl restart ssh
